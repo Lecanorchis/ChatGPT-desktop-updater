@@ -190,7 +190,10 @@ function Set-CheckSchedule($Identity, [string]$ScriptPath) {
     if ($AtLogon) { $triggers += New-ScheduledTaskTrigger -AtLogOn -User $Identity.Name }
     if ($DailyAt) {
         $time = [datetime]::ParseExact($DailyAt, 'HH:mm', [Globalization.CultureInfo]::InvariantCulture)
-        $triggers += New-ScheduledTaskTrigger -Daily -At $time
+        $daily = New-ScheduledTaskTrigger -Daily -At $time
+        # A boundary without a UTC offset follows the computer's local clock.
+        $daily.StartBoundary = $time.ToString('s', [Globalization.CultureInfo]::InvariantCulture)
+        $triggers += $daily
     }
     if ($LauncherPath) {
         $taskAction = New-ScheduledTaskAction -Execute $LauncherPath -Argument '-Action Check -Scheduled'
