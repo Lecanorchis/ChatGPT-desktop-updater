@@ -7,8 +7,11 @@ if (!(Test-Path -LiteralPath $compiler -PathType Leaf)) { throw 'The .NET Framew
 $outputDirectory = Join-Path $PSScriptRoot 'dist'
 [void][IO.Directory]::CreateDirectory($outputDirectory)
 $output = Join-Path $outputDirectory 'ChatGPT-Desktop-Updater.exe'
-$source = Join-Path $PSScriptRoot 'Launcher.cs'
+$launcher = Join-Path $PSScriptRoot 'Launcher.cs'
+$form = Join-Path $PSScriptRoot 'UpdaterForm.cs'
 $script = Join-Path $PSScriptRoot 'Install-ChatGPT.ps1'
-& $compiler /nologo /target:exe /platform:anycpu /optimize+ "/out:$output" "/resource:$script,Install-ChatGPT.ps1" $source
+& $compiler /nologo /target:exe /platform:anycpu /optimize+ /codepage:65001 `
+    /reference:System.Windows.Forms.dll,System.Drawing.dll,System.Web.Extensions.dll `
+    "/out:$output" "/resource:$script,Install-ChatGPT.ps1" $launcher $form
 if ($LASTEXITCODE -ne 0) { throw "Build failed with exit code $LASTEXITCODE." }
 Write-Output $output
