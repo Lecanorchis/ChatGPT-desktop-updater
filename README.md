@@ -1,26 +1,30 @@
 # ChatGPT Desktop MSIX Updater
 
-在 Windows x64 或 ARM64 上，直接從 OpenAI 下載官方 MSIX，透過 Windows PowerShell 為目前登入的帳號安裝或更新 ChatGPT。適用於 Microsoft Store 無法使用，但仍允許 MSIX 安裝的環境。下載來源見 [OpenAI Windows 部署文件](https://learn.chatgpt.com/docs/enterprise/windows-deployment)。
+**English** | [繁體中文](README.zh-TW.md)
 
-## 一鍵安裝或更新
+An independent Windows utility that downloads the official ChatGPT MSIX directly from OpenAI and uses Windows PowerShell to install or update it for the current user. It supports x64 and ARM64 systems where Microsoft Store is unavailable and MSIX deployment is permitted. [OpenAI Windows deployment documentation](https://learn.chatgpt.com/docs/enterprise/windows-deployment)
 
-1. 從 [GitHub Releases](../../releases/latest) 取得 `ChatGPT-Desktop-Updater.exe`，存到固定位置後雙擊。
-2. 在主畫面選擇 **Check for updates and install**（**檢查更新並安裝**）。需要更新或首次安裝時才下載完整 MSIX，視窗會顯示下載百分比。
-3. 在 UAC 視窗用**同一個 Windows 帳號**提升權限。這個帳號須能提升為系統管理員，因為 `Add-AppxPackage` 會安裝到執行指令的帳號。下載與驗證完成後，Windows 安裝程序會關閉仍在執行的 ChatGPT。請先儲存工作。
+## Install or update
 
-## 介面設定
+1. Download `ChatGPT-Desktop-Updater.exe`, save it to a permanent location, and double-click it. [GitHub Releases](https://github.com/Lecanorchis/ChatGPT-desktop-updater/releases/latest)
+2. Select **Check for updates and install**. The updater downloads the full MSIX for a first-time install or when a newer version is available. The window shows the download percentage.
+3. When Windows prompts for administrator approval, elevate using **the same Windows account**. `Add-AppxPackage` installs the app for the account running the command. Save your work before updating. Windows closes any running ChatGPT processes when it installs the verified package.
 
-- **設定排程**可選擇登入目前帳號時檢查、每日指定時間檢查，或兩者同時啟用。首次使用時兩者皆未勾選。清除兩個勾選並儲存即可停用。
-- **其它設定**可切換英語或繁體中文。預設使用英語，並啟用檢查後自動安裝、更新完成後關閉工具、更新完成後開啟 ChatGPT。取消自動安裝後，找到更新時會先顯示新舊版本供確認。
-- 下載資料夾預設為 EXE 所在資料夾。MSIX 暫存在所選資料夾的獨立子資料夾，流程結束後清除。介面設定存放在 `%LOCALAPPDATA%\ChatGPTDesktopUpdater\settings.json`。
+## Interface settings
 
-工具透過官方 HTTPS 端點的 1 byte 部分內容回應讀取套件版本、架構和 ETag。下載時固定使用該 ETag，並驗證檔案長度及 MSIX manifest 內的版本、架構與發行者。Windows 在部署時驗證套件簽章。官方端點若缺少版本資料或在檢查與下載之間更換檔案，工具會停止，可稍後重試。
+- **Set schedule** offers checks at sign-in, daily at a chosen time, or both. Both options start unchecked. Clear both and save to disable scheduled checks.
+- **Other settings** lets you switch between English and Traditional Chinese. The updater defaults to English, automatically installs available updates, and closes itself and opens ChatGPT after a successful installation. Turn off automatic installation to compare the installed and available versions before choosing whether to update.
+- The download folder defaults to the folder containing the EXE. The updater stores the MSIX in a temporary subfolder of the selected folder and cleans it up afterward. Preferences are saved to `%LOCALAPPDATA%\ChatGPTDesktopUpdater\settings.json`.
 
-工具和腳本目前皆未簽章。執行須符合裝置上的程式與 PowerShell 政策，安裝也須符合組織的 MSIX 及相依套件政策。
+## Package verification
 
-## 命令列與腳本
+The updater requests one byte from the official HTTPS endpoint to read the package version, architecture, and ETag. It uses that ETag for the full download and verifies the file size and the version, architecture, and publisher in the MSIX manifest. Windows validates the package signature during deployment. If the endpoint omits the version metadata or changes the package between the check and download, the updater stops. Run the check again to retry.
 
-在工具所在資料夾開啟終端機執行以下指令。`Check` 只顯示版本與結果，不要求 UAC，也不下載完整套件。
+The updater EXE and scripts are unsigned. Running them requires compliance with the device's application and PowerShell policies. Installation is subject to the organization's MSIX and dependency policies.
+
+## Command line and scripts
+
+Run these commands from the folder containing the updater. `Check` reports the installed and available versions without requesting administrator approval or downloading the full package.
 
 ```powershell
 .\ChatGPT-Desktop-Updater.exe -Action Check
@@ -28,17 +32,16 @@
 .\ChatGPT-Desktop-Updater.exe -Action Unschedule
 ```
 
-使用腳本時，在相同指令中把 `.\ChatGPT-Desktop-Updater.exe` 換成 `powershell.exe -NoProfile -File .\Install-ChatGPT.ps1`。
-若要直接使用一鍵安裝腳本，把 `Install-ChatGPT.cmd` 和 `Install-ChatGPT.ps1` 放在一起，雙擊 `.cmd`。
+To use the script, replace `.\ChatGPT-Desktop-Updater.exe` in those commands with `powershell.exe -NoProfile -File .\Install-ChatGPT.ps1`. For one-click installation from source, keep `Install-ChatGPT.cmd` beside `Install-ChatGPT.ps1` and double-click the CMD file.
 
-- `-AtLogon` 在開機後登入目前帳號時檢查。`-DailyAt` 使用 Windows 本機時間，可單獨使用任一選項或同時啟用。
-- 排程只有在該帳號已登入時執行，結果寫入 `%LOCALAPPDATA%\ChatGPTDesktopUpdater\checks.log`。發現更新時，可雙擊工具安裝。
-- 重新設定會替換同一帳號的舊排程。搬移工具後，請重新設定排程以更新路徑。
+- `-AtLogon` checks when the current account signs in. `-DailyAt` uses the Windows local clock. You can use either option or both.
+- Scheduled runs check for updates while the account is signed in and write results to `%LOCALAPPDATA%\ChatGPTDesktopUpdater\checks.log`. To install an available update, open the updater.
+- Saving a schedule replaces the existing schedule for the current account. If you move the updater, save the schedule again to update its path.
 
-## 建置 EXE
+## Build the EXE
 
 ```powershell
 powershell.exe -NoProfile -File .\Build.ps1
 ```
 
-使用 Windows 內的 .NET Framework C# 編譯器產生 `dist\ChatGPT-Desktop-Updater.exe`，無須安裝 .NET SDK。EXE 內嵌同一支 PowerShell 腳本，執行時由系統內建的 Windows PowerShell 5.1 執行。
+The build uses the Windows .NET Framework C# compiler to produce `dist\ChatGPT-Desktop-Updater.exe`. The EXE embeds the PowerShell script and runs it using Windows PowerShell 5.1.
